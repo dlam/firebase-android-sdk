@@ -59,6 +59,7 @@ dependencies {
   implementation(libs.org.json)
   implementation(libs.bundles.maven.resolver)
 
+  implementation(libs.kotlin.gradle.multiplatform)
   implementation("com.google.guava:guava:31.1-jre")
   implementation("org.ow2.asm:asm-tree:9.5")
   implementation("org.eclipse.jgit:org.eclipse.jgit:7.1.0.202411261347-r")
@@ -105,6 +106,10 @@ gradlePlugin {
     register("firebaseJavaLibraryPlugin") {
       id = "firebase-java-library"
       implementationClass = "com.google.firebase.gradle.plugins.FirebaseJavaLibraryPlugin"
+    }
+    register("firebaseKmpLibraryPlugin") {
+      id = "firebase-kmp-library"
+      implementationClass = "com.google.firebase.gradle.plugins.FirebaseKmpLibraryPlugin"
     }
     register("firebaseVendorPlugin") {
       id = "firebase-vendor"

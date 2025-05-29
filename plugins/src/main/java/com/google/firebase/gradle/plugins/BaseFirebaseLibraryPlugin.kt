@@ -124,7 +124,7 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
       }
     }
     project.tasks.register("firebaseLint") { dependsOn("lint") }
-    Coverage.apply(library)
+//    Coverage.apply(library)
   }
 
   protected fun getApiInfo(

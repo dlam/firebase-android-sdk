@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-plugins { id("firebase-java-library") }
-
-firebaseLibrary {
-  publishJavadoc = false
-  releaseNotes { enabled.set(false) }
+plugins {
+  id("firebase-kmp-library")
 }
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+kotlin {
+  jvm()
+
+  sourceSets {
+    val jvmMain by getting
+    jvmMain.dependencies {
+      implementation(libs.javax.inject) }
+  }
 }
 
 tasks.withType<JavaCompile> { options.compilerArgs.add("-Werror") }
-
-dependencies { implementation(libs.javax.inject) }
