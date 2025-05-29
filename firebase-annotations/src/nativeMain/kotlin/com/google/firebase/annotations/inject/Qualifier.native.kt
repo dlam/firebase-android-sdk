@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-plugins {
-  id("firebase-kmp-library")
-}
+package com.google.firebase.annotations.inject
 
-kotlin {
-  jvm()
-  iosX64()
-
-  sourceSets {
-    val commonMain by getting {
-      dependencies {
-        implementation(libs.kotlin.stdlib)
-      }
-    }
-
-    val jvmMain by getting {
-      dependencies {
-        implementation(libs.javax.inject)
-      }
-    }
-  }
-}
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+actual annotation class Qualifier()

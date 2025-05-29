@@ -14,16 +14,18 @@
 
 package com.google.firebase.annotations.concurrent;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import javax.inject.Qualifier;
+import com.google.firebase.annotations.inject.Qualifier
+import kotlin.annotation.AnnotationTarget.FIELD
+import kotlin.annotation.AnnotationTarget.FUNCTION
+import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
 
 /**
- * An executor/coroutine dispatcher for tasks that can block for long periods of time, e.g network
- * IO.
+ * An executor/coroutine dispatcher for long running tasks including disk IO, heavy CPU
+ * computations.
  *
- * @hide
+ * <p>For operations that can block for long periods of time, like network requests, use the {@link
+ * Blocking} executor.
  */
 @Qualifier
-@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
-public @interface Blocking {}
+@Target(VALUE_PARAMETER, FUNCTION, FIELD)
+public annotation class Background

@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.firebase.annotations;
+package com.google.firebase.annotations.concurrent;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
+import com.google.firebase.annotations.inject.Qualifier
+import kotlin.annotation.AnnotationTarget.FIELD
+import kotlin.annotation.AnnotationTarget.FUNCTION
+import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
 
 /**
- * Indicates that this object (class, method, etc) is experimental and that both its signature and
- * implementation are subject to change. An API marked with this annotation provides no guarantee of
- * API stability or backward-compatibility.
+ * An executor/coroutine dispatcher for tasks that can block for long periods of time, e.g network
+ * IO.
+ *
+ * @hide
  */
-@Target({ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.CONSTRUCTOR})
-@Documented
-public @interface PreviewApi {}
+@Qualifier
+@Target(VALUE_PARAMETER, FUNCTION, FIELD)
+public annotation class Blocking

@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,25 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-plugins {
-  id("firebase-kmp-library")
-}
+package com.google.firebase.annotations.concurrent;
 
-kotlin {
-  jvm()
-  iosX64()
+import com.google.firebase.annotations.inject.Qualifier
+import kotlin.annotation.AnnotationTarget.FIELD
+import kotlin.annotation.AnnotationTarget.FUNCTION
+import kotlin.annotation.AnnotationTarget.VALUE_PARAMETER
 
-  sourceSets {
-    val commonMain by getting {
-      dependencies {
-        implementation(libs.kotlin.stdlib)
-      }
-    }
-
-    val jvmMain by getting {
-      dependencies {
-        implementation(libs.javax.inject)
-      }
-    }
-  }
-}
+/**
+ * An executor/coroutine dispatcher for work that must run on the UI thread.
+ *
+ * @hide
+ */
+@Qualifier
+@Target(VALUE_PARAMETER, FUNCTION, FIELD)
+public annotation class UiThread

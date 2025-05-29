@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.firebase.annotations.concurrent;
+package com.google.firebase.annotations.inject
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import javax.inject.Qualifier;
-
-/**
- * An executor/coroutine dispatcher for work that must run on the UI thread.
- *
- * @hide
- */
-@Qualifier
-@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
-public @interface UiThread {}
+@Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+actual typealias Qualifier = javax.inject.Qualifier

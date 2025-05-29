@@ -1,4 +1,4 @@
-// Copyright 2022 Google LLC
+// Copyright 2020 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.google.firebase.annotations.concurrent;
+package com.google.firebase.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import javax.inject.Qualifier;
+import kotlin.annotation.AnnotationTarget.CONSTRUCTOR
+import kotlin.annotation.AnnotationTarget.FUNCTION
 
 /**
- * An executor/coroutine dispatcher for lightweight tasks that never block (on IO or other tasks).
+ * Indicates that the annotated symbol should be called from a {@code Deferred<T>} dependency.
+ *
+ * <p>This is particularly important for callback-style APIs in the context of <a
+ * href="https://developer.android.com/guide/app-bundle/play-feature-delivery">dynamically loaded
+ * modules</a>.
  *
  * @hide
  */
-@Qualifier
-@Target({ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD})
-public @interface Lightweight {}
+@Target(FUNCTION, CONSTRUCTOR)
+// TODO(KT-22265): @Inherited
+public annotation class DeferredApi

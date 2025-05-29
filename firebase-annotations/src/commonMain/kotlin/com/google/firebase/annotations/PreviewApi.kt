@@ -1,4 +1,4 @@
-// Copyright 2020 Google LLC
+// Copyright 2022 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,19 +14,16 @@
 
 package com.google.firebase.annotations;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Target;
+import kotlin.annotation.AnnotationTarget.CONSTRUCTOR
+import kotlin.annotation.AnnotationTarget.FIELD
+import kotlin.annotation.AnnotationTarget.FUNCTION
+import kotlin.annotation.AnnotationTarget.TYPE
 
 /**
- * Indicates that the annotated symbol should be called from a {@code Deferred<T>} dependency.
- *
- * <p>This is particularly important for callback-style APIs in the context of <a
- * href="https://developer.android.com/guide/app-bundle/play-feature-delivery">dynamically loaded
- * modules</a>.
- *
- * @hide
+ * Indicates that this object (class, method, etc) is experimental and that both its signature and
+ * implementation are subject to change. An API marked with this annotation provides no guarantee of
+ * API stability or backward-compatibility.
  */
-@Target({ElementType.METHOD, ElementType.CONSTRUCTOR})
-@Inherited
-public @interface DeferredApi {}
+@Target(TYPE, FIELD, FUNCTION, CONSTRUCTOR)
+@MustBeDocumented
+public annotation class PreviewApi
