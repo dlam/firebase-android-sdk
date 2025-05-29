@@ -246,8 +246,12 @@ constructor(val project: Project, val type: LibraryType) {
 
   val path: String = project.path
 
-  val runtimeClasspath: String =
-    if (type == LibraryType.ANDROID) "releaseRuntimeClasspath" else "runtimeClasspath"
+  val runtimeClasspath: String = when (type) {
+          LibraryType.ANDROID -> "releaseRuntimeClasspath"
+          LibraryType.JAVA -> "runtimeClasspath"
+          // TODO(dustin): KMP based on built target
+          else -> "jvmRuntimeClasspath"
+      }
 
   override fun toString(): String {
     return """FirebaseLibraryExtension{name="$mavenName", project="$path", type="$type"}"""

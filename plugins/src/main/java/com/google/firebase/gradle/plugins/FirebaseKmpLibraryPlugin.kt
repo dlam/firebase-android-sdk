@@ -16,14 +16,11 @@
 
 package com.google.firebase.gradle.plugins
 
-import com.google.firebase.gradle.plugins.LibraryType.JAVA
+import com.google.firebase.gradle.plugins.LibraryType.KMP
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
 import com.google.firebase.gradle.plugins.semver.GmavenCopier
-import org.gradle.api.Action
-import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
@@ -72,7 +69,7 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
 
   private fun setupFirebaseLibraryExtension(project: Project) {
     val firebaseLibrary =
-      project.extensions.create<FirebaseLibraryExtension>("firebaseLibrary", project, JAVA)
+      project.extensions.create<FirebaseLibraryExtension>("firebaseLibrary", project, KMP)
 
     setupDefaults(project, firebaseLibrary)
     setupStaticAnalysis(project, firebaseLibrary)

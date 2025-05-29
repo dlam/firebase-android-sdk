@@ -16,7 +16,10 @@ package com.google.firebase.gradle.plugins;
 
 public enum LibraryType {
   ANDROID("aar"),
-  JAVA("jar");
+  JAVA("jar"),
+  // TODO(dustin): Replace usages of this entirely by dynamically fetching the right thing based on
+  //  what targets are enabled.
+  KMP("jar");
 
   private final String format;
 
