@@ -18,6 +18,7 @@ plugins {
 
 kotlin {
   jvm()
+  iosX64()
 
   sourceSets {
     val jvmMain by getting

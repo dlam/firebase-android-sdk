@@ -54,7 +54,8 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
       }
     }
 
-    project.apply<DackkaPlugin>()
+    // TODO(dustin): We need to setup Dackka to be aware of KMP configurations
+    // project.apply<DackkaPlugin>()
 
     // reduce the likelihood of kotlin module files colliding.
     project.tasks.withType<KotlinCompile> {
