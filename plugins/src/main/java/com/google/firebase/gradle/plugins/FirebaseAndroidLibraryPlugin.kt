@@ -213,6 +213,6 @@ class FirebaseAndroidLibraryPlugin : BaseFirebaseLibraryPlugin() {
 
     project.tasks.withType<GenerateModuleMetadata> { isEnabled = false }
 
-    configurePublishing(project, firebaseLibrary)
+      project.configurePublishing(firebaseLibrary)
   }
 }

@@ -17,7 +17,6 @@
 package com.google.firebase.gradle.plugins
 
 import com.android.build.gradle.LibraryExtension
-import com.google.firebase.gradle.plugins.ci.Coverage
 import com.google.firebase.gradle.plugins.services.GMavenService
 import java.io.File
 import java.nio.file.Paths
@@ -177,7 +176,7 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
     }
 
   /**
-   * Adds + configures the [MavenPublishPlugin] for the given [project].
+   * Adds + configures the [MavenPublishPlugin] for the given [this@configurePublishing].
    *
    * This provides the repository we publish to (a folder in the root build directory), and
    * configures maven pom generation.
@@ -185,8 +184,7 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
    * @see [applyPomTransformations]
    * @see [FirebaseLibraryExtension.customizePomAction]
    */
-  protected fun configurePublishing(project: Project, firebaseLibrary: FirebaseLibraryExtension) {
-    with(project) {
+  protected fun Project.configurePublishing(firebaseLibrary: FirebaseLibraryExtension) {
       apply<MavenPublishPlugin>()
 
       // TODO(b/371625225): sources jar is missing from java libs
@@ -206,7 +204,6 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
             firebaseLibrary.applyPomTransformations(pom)
             from(components.findByName(firebaseLibrary.type.componentName))
           }
-        }
       }
     }
   }

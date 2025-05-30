@@ -46,38 +46,40 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
 
   override fun apply(project: Project) {
+    val firebaseExtension = project.extensions.create<FirebaseLibraryExtension>(
+      "firebaseLibrary", project, KMP
+    )
+
     project.apply<KotlinMultiplatformPluginWrapper>()
 
     project.plugins.configureEach {
       when (this) {
-        is KotlinBasePluginWrapper -> configureWithJavaPlugin(project)
+        is KotlinBasePluginWrapper -> configureWithJavaPlugin(project, firebaseExtension)
       }
     }
 
     // TODO(dustin): We need to setup Dackka to be aware of KMP configurations
     // project.apply<DackkaPlugin>()
+    project.configurePublishing(firebaseExtension)
 
+    // TODO(dustin): Is this needed?
     // reduce the likelihood of kotlin module files colliding.
     project.tasks.withType<KotlinCompile> {
       kotlinOptions.freeCompilerArgs = listOf("-module-name", kotlinModuleName(project))
     }
   }
 
-  private fun configureWithJavaPlugin(project: Project) {
-    setupFirebaseLibraryExtension(project)
+  private fun configureWithJavaPlugin(project: Project, firebaseExtension: FirebaseLibraryExtension) {
+    setupFirebaseLibraryExtension(project, firebaseExtension)
     registerMakeReleaseNotesTask(project)
   }
 
-  private fun setupFirebaseLibraryExtension(project: Project) {
-    val firebaseLibrary =
-      project.extensions.create<FirebaseLibraryExtension>("firebaseLibrary", project, KMP)
-
-    setupDefaults(project, firebaseLibrary)
-    setupStaticAnalysis(project, firebaseLibrary)
+  private fun setupFirebaseLibraryExtension(project: Project, firebaseExtension: FirebaseLibraryExtension) {
+    setupDefaults(project, firebaseExtension)
+    setupStaticAnalysis(project, firebaseExtension)
 //    setupApiInformationAnalysis(project)
-    getIsPomValidTask(project, firebaseLibrary)
-    setupVersionCheckTasks(project, firebaseLibrary)
-//    configurePublishing(project, firebaseLibrary)
+    getIsPomValidTask(project, firebaseExtension)
+    setupVersionCheckTasks(project, firebaseExtension)
   }
 
   private fun setupVersionCheckTasks(project: Project, firebaseLibrary: FirebaseLibraryExtension) {

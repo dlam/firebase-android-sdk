@@ -68,7 +68,7 @@ class FirebaseJavaLibraryPlugin : BaseFirebaseLibraryPlugin() {
     setupApiInformationAnalysis(project)
     getIsPomValidTask(project, firebaseLibrary)
     setupVersionCheckTasks(project, firebaseLibrary)
-    configurePublishing(project, firebaseLibrary)
+      project.configurePublishing(firebaseLibrary)
   }
 
   private fun setupVersionCheckTasks(project: Project, firebaseLibrary: FirebaseLibraryExtension) {
