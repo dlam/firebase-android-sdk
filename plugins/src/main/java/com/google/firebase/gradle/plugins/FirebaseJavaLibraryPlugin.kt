@@ -17,6 +17,7 @@
 package com.google.firebase.gradle.plugins
 
 import com.google.firebase.gradle.plugins.LibraryType.JAVA
+import com.google.firebase.gradle.plugins.ci.Coverage
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
 import com.google.firebase.gradle.plugins.semver.GmavenCopier
 import org.gradle.api.Project
@@ -65,6 +66,7 @@ class FirebaseJavaLibraryPlugin : BaseFirebaseLibraryPlugin() {
 
     setupDefaults(project, firebaseLibrary)
     setupStaticAnalysis(project, firebaseLibrary)
+    Coverage.apply(firebaseLibrary)
     setupApiInformationAnalysis(project)
     getIsPomValidTask(project, firebaseLibrary)
     setupVersionCheckTasks(project, firebaseLibrary)

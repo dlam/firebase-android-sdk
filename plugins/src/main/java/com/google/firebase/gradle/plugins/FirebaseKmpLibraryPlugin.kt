@@ -19,6 +19,8 @@ package com.google.firebase.gradle.plugins
 import com.google.firebase.gradle.plugins.LibraryType.KMP
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
 import com.google.firebase.gradle.plugins.semver.GmavenCopier
+import kotlinx.kover.gradle.plugin.KoverGradlePlugin
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import org.gradle.api.Project
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.plugins.JavaPluginExtension
@@ -49,17 +51,20 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
     val firebaseExtension = project.extensions.create<FirebaseLibraryExtension>(
       "firebaseLibrary", project, KMP
     )
+    setupDefaults(project, firebaseExtension)
 
     project.apply<KotlinMultiplatformPluginWrapper>()
 
     project.plugins.configureEach {
       when (this) {
+        // TODO(dustin): Setup for other targets.
         is KotlinBasePluginWrapper -> configureWithJavaPlugin(project, firebaseExtension)
       }
     }
 
     // TODO(dustin): We need to setup Dackka to be aware of KMP configurations
     // project.apply<DackkaPlugin>()
+    project.configureCodeCoverage()
     project.configurePublishing(firebaseExtension)
 
     // TODO(dustin): Is this needed?
@@ -70,16 +75,17 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
   }
 
   private fun configureWithJavaPlugin(project: Project, firebaseExtension: FirebaseLibraryExtension) {
-    setupFirebaseLibraryExtension(project, firebaseExtension)
-    registerMakeReleaseNotesTask(project)
-  }
-
-  private fun setupFirebaseLibraryExtension(project: Project, firebaseExtension: FirebaseLibraryExtension) {
-    setupDefaults(project, firebaseExtension)
     setupStaticAnalysis(project, firebaseExtension)
 //    setupApiInformationAnalysis(project)
     getIsPomValidTask(project, firebaseExtension)
     setupVersionCheckTasks(project, firebaseExtension)
+
+    registerMakeReleaseNotesTask(project)
+  }
+
+  private fun Project.configureCodeCoverage() {
+    apply<KoverGradlePlugin>()
+    extensions.getByType<KoverProjectExtension>().useJacoco.set(true)
   }
 
   private fun setupVersionCheckTasks(project: Project, firebaseLibrary: FirebaseLibraryExtension) {

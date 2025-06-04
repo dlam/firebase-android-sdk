@@ -16,6 +16,18 @@ package com.google.firebase.gradle.plugins.ci;
 
 import com.google.firebase.gradle.plugins.FirebaseLibraryExtension;
 import com.google.firebase.gradle.plugins.PublishingPlugin;
+
+import org.gradle.api.GradleException;
+import org.gradle.api.Plugin;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencySet;
+import org.gradle.api.artifacts.ProjectDependency;
+import org.gradle.api.attributes.Usage;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -25,17 +37,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.gradle.api.GradleException;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.artifacts.DependencySet;
-import org.gradle.api.artifacts.ProjectDependency;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 // TODO(b/372719175): Migrate to Kotlin
-/** Builds Firebase libraries for consumption by the smoke tests. */
+
+/**
+ * Builds Firebase libraries for consumption by the smoke tests.
+ */
 public class SmokeTestsPlugin implements Plugin<Project> {
   @Override
   public void apply(Project project) {
@@ -125,17 +132,25 @@ public class SmokeTestsPlugin implements Plugin<Project> {
       }
 
       // Find all (head) dependencies to other projects in this repository.
-      DependencySet all =
-          p.getConfigurations().getByName(library.getRuntimeClasspath()).getAllDependencies();
-      Set<Project> affected =
-          all.stream()
-              .filter(it -> it instanceof ProjectDependency)
-              .map(it -> (ProjectDependency) it)
-              .map(ProjectDependency::getDependencyProject)
-              .collect(Collectors.toSet());
+      Configuration runtimeClasspathConfiguration =
+          p.getConfigurations().findByName(library.getRuntimeClasspath());
+      if (runtimeClasspathConfiguration != null) {
+        Set<Project> affected =
+            runtimeClasspathConfiguration.getAllDependencies().stream()
+                .filter(it -> it instanceof ProjectDependency)
+                .map(it -> (ProjectDependency) it)
+                .map(ProjectDependency::getDependencyProject)
+                .collect(Collectors.toSet());
 
-      // Recurse with the new dependencies.
-      getChangedProjectsLoop(affected, changed);
+        // Recurse with the new dependencies.
+        getChangedProjectsLoop(affected, changed);
+      } else {
+        throw new GradleException(
+            "Failed to get project dependencies for smoke tests on JVM/Android as the" +
+                " configuration: " + library.getRuntimeClasspath() +
+                " does not exist.\nDid you forget to add a jvm() target to " + p.getPath() +"?"
+            );
+      }
     }
   }
 }

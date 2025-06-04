@@ -17,6 +17,7 @@
 package com.google.firebase.gradle.plugins
 
 import com.android.build.gradle.LibraryExtension
+import com.google.firebase.gradle.plugins.ci.Coverage
 import com.google.firebase.gradle.plugins.services.GMavenService
 import java.io.File
 import java.nio.file.Paths
@@ -123,7 +124,6 @@ abstract class BaseFirebaseLibraryPlugin : Plugin<Project> {
       }
     }
     project.tasks.register("firebaseLint") { dependsOn("lint") }
-//    Coverage.apply(library)
   }
 
   protected fun getApiInfo(

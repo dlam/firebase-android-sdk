@@ -19,6 +19,7 @@ package com.google.firebase.gradle.plugins
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.LibraryPlugin
 import com.google.firebase.gradle.plugins.LibraryType.ANDROID
+import com.google.firebase.gradle.plugins.ci.Coverage
 import com.google.firebase.gradle.plugins.ci.device.FirebaseTestServer
 import com.google.firebase.gradle.plugins.license.LicenseResolverPlugin
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
@@ -103,6 +104,7 @@ class FirebaseAndroidLibraryPlugin : BaseFirebaseLibraryPlugin() {
     setupDefaults(project, firebaseLibrary)
     setupApiInformationAnalysis(project, android)
     setupStaticAnalysis(project, firebaseLibrary)
+    Coverage.apply(firebaseLibrary)
     getIsPomValidTask(project, firebaseLibrary)
     setupVersionCheckTasks(project, firebaseLibrary)
     configurePublishing(project, firebaseLibrary, android)
