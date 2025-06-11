@@ -16,9 +16,6 @@
 
 package com.google.firebase.gradle.plugins
 
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
@@ -33,6 +30,9 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 
 val Project.metalavaConfig: Configuration
   get() =
@@ -156,7 +156,7 @@ abstract class ApiInformationTask : DefaultTask() {
 
   @TaskAction
   fun run() {
-    val sourcePath = sources.files.filter { it.exists() }.map { it.absolutePath }.joinToString(":")
+    val sourcePath = sources.files.filter { it.exists() }.joinToString(File.pathSeparator) { it.absolutePath }
 
     val classPath = classPath.files.asSequence().map { it.absolutePath }.toMutableList()
     project.androidJar?.let { classPath += listOf(it.absolutePath) }

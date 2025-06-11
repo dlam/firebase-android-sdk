@@ -249,7 +249,6 @@ constructor(val project: Project, val type: LibraryType) {
   val runtimeClasspath: String = when (type) {
           LibraryType.ANDROID -> "releaseRuntimeClasspath"
           LibraryType.JAVA -> "runtimeClasspath"
-          // TODO(dustin): KMP based on built target
           else -> "jvmRuntimeClasspath"
       }
 
