@@ -17,6 +17,7 @@
 package com.google.firebase.gradle.plugins
 
 import com.android.build.api.dsl.KotlinMultiplatformAndroidTarget
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 import com.google.firebase.gradle.plugins.LibraryType.KMP
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
 import com.google.firebase.gradle.plugins.semver.GmavenCopier
@@ -36,8 +37,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
-import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinAndroidTarget
+import org.jetbrains.kotlin.gradle.plugin.KotlinTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -71,7 +71,7 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
     registerMakeReleaseNotesTask(project)
 
     // TODO(dustin): We need to setup Dackka to be aware of KMP configurations
-    // project.apply<DackkaPlugin>()
+//    project.apply<DackkaPlugin>()
     project.configureCodeCoverage()
     project.configurePublishing(firebaseExtension)
 
@@ -133,32 +133,43 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
     }
   }
 
-  // afterEvaluate is required to read extension properties, configuration and applied targets.
+  // afterEvaluate is required to read extension properties, configurations and kmp targets.
+  @Suppress("UnstableApiUsage")
   private fun Project.configureApiTasks() = afterEvaluate {
     val kmpExtension = kmpExtension!!
 
     // Prioritize android target over jvm for api tracking.
-    val compilationInputs = if (kmpExtension.hasAndroidTarget()) {
-      @Suppress("UnstableApiUsage")
-      val androidTarget = kmpExtension.targets.withType<KotlinMultiplatformAndroidTarget>().single()
+    val androidTarget = kmpExtension.targetOrNull<KotlinMultiplatformAndroidTarget>()
+    val jvmTarget = kmpExtension.targetOrNull<KotlinJvmTarget>()
+    val compilationInputs = if (androidTarget != null) {
       val androidCompilation: Provider<KotlinCompilation<*>> = provider {
-        @Suppress("UnstableApiUsage")
         androidTarget.compilations.findByName(MAIN_COMPILATION_NAME)
       }
-      KmpCompilationInputs(
-        project = this,
+      MetalavaCompilationInputs(
         compilationProvider = androidCompilation,
-        bootClasspath = androidJar,
+        bootClasspath = project.files(
+          project.extensions
+            .findByType<LibraryAndroidComponentsExtension>()!!
+            .sdkComponents
+            .bootClasspath
+        )
       )
-    } else if (kmpExtension.hasJvmTarget()) {
-      val jvmTarget = kmpExtension.targets.single { it.platformType == KotlinPlatformType.jvm }
+    } else if (jvmTarget != null) {
       val jvmCompilation: Provider<KotlinCompilation<*>> = provider {
         jvmTarget.compilations.findByName(MAIN_COMPILATION_NAME)
       }
-      KmpCompilationInputs(
-        project = this,
+      MetalavaCompilationInputs(
         compilationProvider = jvmCompilation,
-        bootClasspath = androidJar,
+        bootClasspath = configurations
+          .getByName(firebaseLibrary.runtimeClasspath)
+          .incoming
+          .artifactView {
+            attributes {
+              attribute(Attribute.of("artifactType", String::class.java), "jar")
+            }
+          }
+          .artifacts
+          .artifactFiles
       )
     } else {
       throw GradleException("Failed to setup metalava API tasks as there was no JVM or Android target set.")
@@ -175,25 +186,24 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
     val docStubs = getDocStubs(this, srcDirs)
 
     tasks.getByName("check").dependsOn(docStubs)
-    val classpath = configurations
-      .getByName(firebaseLibrary.runtimeClasspath)
-      .incoming
-      .artifactView {
-        this.attributes { this.attribute(Attribute.of("artifactType", String::class.java), "jar") }
-      }
-      .artifacts
-      .artifactFiles
-    apiInfo.configure { classPath = classpath }
-    generateApiTxt.configure { classPath = classpath }
-    docStubs.configure { classPath = classpath }
+
+    apiInfo.configure { classPath = compilationInputs.bootClasspath }
+    generateApiTxt.configure { classPath = compilationInputs.bootClasspath }
+    docStubs.configure { classPath = compilationInputs.bootClasspath }
   }
 }
 
-internal val Project.kmpExtension
+private val Project.kmpExtension
   get() = extensions.findByType<KotlinMultiplatformExtension>()
 
-internal fun KotlinMultiplatformExtension.hasAndroidTarget(): Boolean =
-  targets.withType<KotlinAndroidTarget>().isNotEmpty()
+private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.hasTarget(): Boolean {
+  return targets.withType<T>().isNotEmpty()
+}
 
-internal fun KotlinMultiplatformExtension.hasJvmTarget(): Boolean =
-  targets.withType<KotlinJvmTarget>().isNotEmpty()
+private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.target(): T {
+  return targets.withType<T>().single()
+}
+
+private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.targetOrNull(): T? {
+  return targets.withType<T>().singleOrNull()
+}
