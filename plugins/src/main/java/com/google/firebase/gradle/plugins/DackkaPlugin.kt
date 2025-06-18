@@ -17,7 +17,11 @@
 package com.google.firebase.gradle.plugins
 
 import com.android.build.api.attributes.BuildTypeAttr
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
+import com.android.build.api.variant.KotlinMultiplatformAndroidComponentsExtension
 import com.android.build.gradle.LibraryExtension
+import com.android.build.gradle.LibraryPlugin
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.file.RegularFile
@@ -28,6 +32,10 @@ import org.gradle.api.tasks.TaskProvider
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
+import org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper
+import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 
 /**
  * # Dackka Plugin
@@ -120,24 +128,40 @@ abstract class DackkaPlugin : Plugin<Project> {
     registerCleanDackkaDocumentation(project)
     val kotlinDoc = registerKotlinDocTask(project)
 
-    // TODO(b/270576405): remove afterEvalutate after fixed
-    project.afterEvaluate {
-      if (weShouldPublish(this)) {
-        val generateDocumentation = registerGenerateDackkaDocumentationTask(project)
+    if (weShouldPublish(project)) {
+      project.plugins.configureEach {
+        when (this) {
+          is KotlinMultiplatformPluginWrapper -> {
+            val generateDocumentation =
+              registerGenerateDackkaDocumentationTaskForKmpProject(project)
+            val outputDir = generateDocumentation.flatMap { it.outputDirectory }
+            val firesiteTransform = registerFiresiteTransformTask(project, outputDir)
+            val transformedDir = firesiteTransform.flatMap { it.outputDirectory }
+            val copyDocsToCommonDirectory =
+              registerCopyDocsToCommonDirectoryTask(project, transformedDir)
 
-        val outputDir = generateDocumentation.flatMap { it.outputDirectory }
+            kotlinDoc.configure {
+              dependsOn(generateDocumentation, firesiteTransform, copyDocsToCommonDirectory)
 
-        val firesiteTransform = registerFiresiteTransformTask(project, outputDir)
+              outputs.dir(copyDocsToCommonDirectory.map { it.destinationDir })
+            }
+          }
 
-        val transformedDir = firesiteTransform.flatMap { it.outputDirectory }
+          is LibraryPlugin -> {
+            val generateDocumentation =
+              registerGenerateDackkaDocumentationTaskForLibraryProject(project)
+            val outputDir = generateDocumentation.flatMap { it.outputDirectory }
+            val firesiteTransform = registerFiresiteTransformTask(project, outputDir)
+            val transformedDir = firesiteTransform.flatMap { it.outputDirectory }
+            val copyDocsToCommonDirectory =
+              registerCopyDocsToCommonDirectoryTask(project, transformedDir)
 
-        val copyDocsToCommonDirectory =
-          registerCopyDocsToCommonDirectoryTask(project, transformedDir)
+            kotlinDoc.configure {
+              dependsOn(generateDocumentation, firesiteTransform, copyDocsToCommonDirectory)
 
-        kotlinDoc.configure {
-          dependsOn(generateDocumentation, firesiteTransform, copyDocsToCommonDirectory)
-
-          outputs.dir(copyDocsToCommonDirectory.map { it.destinationDir })
+              outputs.dir(copyDocsToCommonDirectory.map { it.destinationDir })
+            }
+          }
         }
       }
     }
@@ -167,10 +191,54 @@ abstract class DackkaPlugin : Plugin<Project> {
     }
   }
 
-  private fun registerGenerateDackkaDocumentationTask(
+  @Suppress("UnstableApiUsage")
+  private fun registerGenerateDackkaDocumentationTaskForKmpProject(
     project: Project
   ): TaskProvider<GenerateDocumentationTask> =
     project.tasks.register<GenerateDocumentationTask>("generateDackkaDocumentation") {
+      val outputDir by tempFile("dackkaRawOutput")
+      outputDirectory.set(outputDir)
+      suppressedFiles.set(emptyList())
+      packageListFiles.set(fetchPackageLists(project))
+
+      val kmpExtension = project.kmpExtension!!
+      val androidTarget = kmpExtension.targetOrNull<KotlinMultiplatformAndroidLibraryTarget>()
+      if (androidTarget != null) {
+        val androidCompilation: Provider<KotlinCompilation<*>> = project.provider {
+          androidTarget.compilations.findByName(MAIN_COMPILATION_NAME)
+        }
+        val srcDirs = project.files(
+          androidCompilation.map { compilation ->
+            compilation.allKotlinSourceSets.flatMap { it.kotlin.sourceDirectories }
+          }
+        )
+        sources.set(srcDirs)
+
+        val androidExtension =
+          project.extensions.getByType<KotlinMultiplatformAndroidComponentsExtension>()
+        val classpath =
+//          variant.compileConfiguration.jars +
+          project.javadocConfig.jars +
+          project.files(androidExtension.sdkComponents.bootClasspath)
+        dependencies.set(classpath)
+      } else if (kmpExtension.hasTarget<KotlinJvmTarget>()) {
+        throw GradleException("Dackka plugin is not yet implemented for KMP projects without an Android target.")
+      } else {
+        throw GradleException("JVM or Android target on a KMP project is required to resolve Dackka sources, but neither was found")
+      }
+
+      applyCommonConfigurations("sourcesJar")
+    }
+
+  private fun registerGenerateDackkaDocumentationTaskForLibraryProject(
+    project: Project
+  ): TaskProvider<GenerateDocumentationTask> =
+    project.tasks.register<GenerateDocumentationTask>("generateDackkaDocumentation") {
+      val outputDir by tempFile("dackkaRawOutput")
+      outputDirectory.set(outputDir)
+      suppressedFiles.set(emptyList())
+      packageListFiles.set(fetchPackageLists(project))
+
       with(project.extensions.getByType<LibraryExtension>()) {
         libraryVariants.all {
           if (name == "release") {
@@ -179,17 +247,12 @@ abstract class DackkaPlugin : Plugin<Project> {
 
             val sourceDirectories =
               sourceSets.flatMap { it.javaDirectories } +
-                sourceSets.flatMap { it.kotlinDirectories }
-
-            val outputDir by tempFile("dackkaRawOutput")
+                  sourceSets.flatMap { it.kotlinDirectories }
 
             sources.set(sourceDirectories)
             dependencies.set(classpath)
-            outputDirectory.set(outputDir)
-            suppressedFiles.set(emptyList())
-            packageListFiles.set(fetchPackageLists(project))
 
-            applyCommonConfigurations()
+            applyCommonConfigurations("createFullJarRelease")
           }
         }
       }
@@ -201,8 +264,8 @@ abstract class DackkaPlugin : Plugin<Project> {
       .matching { include("**/package-list") }
       .toList()
 
-  private fun GenerateDocumentationTask.applyCommonConfigurations() {
-    dependsOnAndMustRunAfter("createFullJarRelease")
+  private fun GenerateDocumentationTask.applyCommonConfigurations(sourcesTask: String) {
+    dependsOnAndMustRunAfter(sourcesTask)
 
     val dackkaFile = project.layout.projectDirectory.file(project.dackkaConfig.singleFile.path)
 

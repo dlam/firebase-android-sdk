@@ -3,7 +3,7 @@
 # it needs to match the protobuf version which grpc has transitive dependency on, which
 # needs to match the version of grpc that grpc-kotlin has a transitive dependency on.
 android-lint = "31.3.2"
-androidGradlePlugin = "8.3.2"
+androidGradlePlugin = "8.10.1"
 androidx-test-core="1.5.0"
 androidx-test-junit="1.1.5"
 androidx-test-truth = "1.5.0"
@@ -79,6 +79,7 @@ wiremockStandalone = "2.26.3"
 [libraries]
 android-gradlePlugin-builder-test-api = { group = "com.android.tools.build", name = "builder-test-api", version.ref = "androidGradlePlugin" }
 android-gradlePlugin-gradle = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradlePlugin" }
+android-gradleKmpPlugin-gradle = { group = "com.android.kotlin.multiplatform.library", name = "com.android.kotlin.multiplatform.library.gradle.plugin", version.ref = "androidGradlePlugin" }
 android-gradlePlugin-gradle-api = { group = "com.android.tools.build", name = "gradle-api", version.ref = "androidGradlePlugin" }
 android-lint = { module = "com.android.tools.lint:lint", version.ref = "android-lint" }
 android-lint-api = { module = "com.android.tools.lint:lint-api", version.ref = "android-lint" }

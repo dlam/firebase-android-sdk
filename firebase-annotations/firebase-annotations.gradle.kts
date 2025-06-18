@@ -18,6 +18,14 @@ plugins {
 
 kotlin {
   jvm()
+  androidLibrary {
+    namespace = "com.firebase"
+    compileSdk = 34
+    minSdk = 24
+
+    withHostTestBuilder() {}
+    withDeviceTestBuilder() {}
+  }
   iosX64()
   iosArm64()
   iosSimulatorArm64()

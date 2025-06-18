@@ -17,7 +17,8 @@
 package com.google.firebase.gradle.plugins
 
 import com.android.build.api.dsl.KotlinMultiplatformAndroidTarget
-import com.android.build.api.variant.LibraryAndroidComponentsExtension
+import com.android.build.api.variant.KotlinMultiplatformAndroidComponentsExtension
+import com.android.build.gradle.api.KotlinMultiplatformAndroidPlugin
 import com.google.firebase.gradle.plugins.LibraryType.KMP
 import com.google.firebase.gradle.plugins.semver.ApiDiffer
 import com.google.firebase.gradle.plugins.semver.GmavenCopier
@@ -62,6 +63,8 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
     setupDefaults(project, firebaseExtension)
 
     project.apply<KotlinMultiplatformPluginWrapper>()
+    @Suppress("UnstableApiUsage")
+    project.apply<KotlinMultiplatformAndroidPlugin>()
     project.configureApiTasks()
 
     setupStaticAnalysis(project, firebaseExtension)
@@ -70,8 +73,7 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
 
     registerMakeReleaseNotesTask(project)
 
-    // TODO(dustin): We need to setup Dackka to be aware of KMP configurations
-//    project.apply<DackkaPlugin>()
+    project.apply<DackkaPlugin>()
     project.configureCodeCoverage()
     project.configurePublishing(firebaseExtension)
 
@@ -145,14 +147,11 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
       val androidCompilation: Provider<KotlinCompilation<*>> = provider {
         androidTarget.compilations.findByName(MAIN_COMPILATION_NAME)
       }
+      val androidKmpExtension =
+        project.extensions.getByType<KotlinMultiplatformAndroidComponentsExtension>()
       MetalavaCompilationInputs(
         compilationProvider = androidCompilation,
-        bootClasspath = project.files(
-          project.extensions
-            .findByType<LibraryAndroidComponentsExtension>()!!
-            .sdkComponents
-            .bootClasspath
-        )
+        bootClasspath = project.files(androidKmpExtension.sdkComponents.bootClasspath)
       )
     } else if (jvmTarget != null) {
       val jvmCompilation: Provider<KotlinCompilation<*>> = provider {
@@ -193,17 +192,17 @@ class FirebaseKmpLibraryPlugin : BaseFirebaseLibraryPlugin() {
   }
 }
 
-private val Project.kmpExtension
+internal val Project.kmpExtension
   get() = extensions.findByType<KotlinMultiplatformExtension>()
 
-private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.hasTarget(): Boolean {
+internal inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.hasTarget(): Boolean {
   return targets.withType<T>().isNotEmpty()
 }
 
-private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.target(): T {
+internal inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.target(): T {
   return targets.withType<T>().single()
 }
 
-private inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.targetOrNull(): T? {
+internal inline fun <reified T : KotlinTarget> KotlinMultiplatformExtension.targetOrNull(): T? {
   return targets.withType<T>().singleOrNull()
 }
